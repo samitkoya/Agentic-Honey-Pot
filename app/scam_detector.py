@@ -2,7 +2,7 @@
 
 from typing import Tuple, Optional
 import google.generativeai as genai
-from config import (
+from .config import (
     LLM_PROVIDER, GEMINI_API_KEY, OPENAI_API_KEY,
     SCAM_KEYWORDS, SCAM_PATTERNS
 )

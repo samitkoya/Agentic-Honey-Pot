@@ -2,8 +2,8 @@
 
 import httpx
 from typing import Optional
-from models import GuviCallbackPayload, ExtractedIntelligence
-from config import GUVI_CALLBACK_URL
+from .models import GuviCallbackPayload, ExtractedIntelligence
+from .config import GUVI_CALLBACK_URL
 
 
 async def send_guvi_callback(

@@ -2,8 +2,8 @@
 
 import re
 from typing import List, Set
-from models import ExtractedIntelligence, Message
-from config import SCAM_KEYWORDS
+from .models import ExtractedIntelligence, Message
+from .config import SCAM_KEYWORDS
 
 
 class IntelligenceExtractor:

@@ -56,7 +56,7 @@ Content-Type: application/json
   "message": {
     "sender": "scammer",
     "text": "Your bank account will be blocked today. Verify immediately.",
-    "timestamp": "2026-01-31T10:15:30Z"
+    "timestamp": 1770005528731
   },
   "conversationHistory": [],
   "metadata": {
@@ -110,17 +110,19 @@ Content-Type: application/json
 
 ```
 AIHP/
-├── main.py                 # FastAPI application
-├── config.py               # Configuration & constants
-├── models.py               # Pydantic data models
-├── scam_detector.py        # Scam detection engine
-├── agent.py                # AI agent for engagement
-├── intelligence_extractor.py # Intelligence extraction
-├── session_manager.py      # Session management
-├── guvi_callback.py        # GUVI API callback
-├── requirements.txt        # Python dependencies
-├── .env.example           # Environment template
-└── README.md              # This file
+├── app/                        # Application Package
+│   ├── __init__.py
+│   ├── agent.py                # AI agent for engagement
+│   ├── config.py               # Configuration & constants
+│   ├── guvi_callback.py        # GUVI API callback
+│   ├── intelligence_extractor.py # Intelligence extraction
+│   ├── models.py               # Pydantic data models
+│   ├── scam_detector.py        # Scam detection engine
+│   └── session_manager.py      # Session management
+├── main.py                     # Entry point & FastAPI app
+├── requirements.txt            # Python dependencies
+├── .env.example                # Environment template
+└── README.md                   # This file
 ```
 
 ## 🔑 Features
@@ -145,7 +147,7 @@ $body = @{
     message = @{
         sender = "scammer"
         text = "Your bank account will be blocked. Click here: http://fake.link/verify"
-        timestamp = "2026-01-31T10:00:00Z"
+        timestamp = 1770005528731
     }
     conversationHistory = @()
 } | ConvertTo-Json -Depth 4

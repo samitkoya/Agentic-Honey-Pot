@@ -1,7 +1,7 @@
 """Session management for multi-turn conversations."""
 
 from typing import Dict, Optional
-from models import SessionData, Message, ExtractedIntelligence
+from .models import SessionData, Message, ExtractedIntelligence
 
 
 class SessionManager:

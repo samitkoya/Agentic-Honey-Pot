@@ -3,8 +3,8 @@
 import random
 from typing import List, Optional
 import google.generativeai as genai
-from config import LLM_PROVIDER, GEMINI_API_KEY, OPENAI_API_KEY
-from models import Message
+from .config import LLM_PROVIDER, GEMINI_API_KEY, OPENAI_API_KEY
+from .models import Message
 
 
 class HoneypotAgent:
