@@ -154,7 +154,3 @@ $body = @{
 
 Invoke-RestMethod -Uri "http://localhost:8000/api/honeypot" -Method Post -Headers $headers -Body $body
 ```
-
-## 📝 License
-
-MIT License - Built for GUVI Hackathon 2026
