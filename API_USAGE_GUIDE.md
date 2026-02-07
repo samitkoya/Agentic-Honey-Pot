@@ -1,48 +1,46 @@
-# API Usage Guide - Input & Output Reference
-# ============================================
+# API Usage Guide
 
 This guide explains how to use the Agentic Honey-Pot API when running locally.
 
-
-## STEP 1: START THE SERVER
-===========================
+## Step 1: Start the Server
 
 Open a terminal and run:
 
-    python main.py
+```bash
+python main.py
+```
 
 You should see:
-    INFO:     Uvicorn running on http://0.0.0.0:8000
+```
+INFO:     Uvicorn running on http://0.0.0.0:8000
+```
 
-The server is now running at: http://localhost:8000
+The server is now running at: `http://localhost:8000`
 
+## Step 2: Test the Server
 
-## STEP 2: TEST THE SERVER
-===========================
-
-Open a browser and go to: http://localhost:8000
+Open a browser and go to: `http://localhost:8000`
 
 Expected Output:
-    {
-        "service": "Agentic Honey-Pot API",
-        "version": "1.0.0",
-        "status": "active"
-    }
+```json
+{
+    "service": "Agentic Honey-Pot API",
+    "version": "1.0.0",
+    "status": "active"
+}
+```
 
+## Step 3: Using the Honeypot API
 
-## STEP 3: USING THE HONEYPOT API
-==================================
+**Endpoint:** `POST http://localhost:8000/api/honeypot`
 
-Endpoint: POST http://localhost:8000/api/honeypot
+**Required Headers:**
+- `X-API-Key`: your-api-key (from .env file)
+- `Content-Type`: application/json
 
-Required Headers:
-    - X-API-Key: your-api-key (from .env file)
-    - Content-Type: application/json
+### Input Format
 
-
-### INPUT FORMAT
------------------
-
+```json
 {
     "sessionId": "unique-session-id",
     "message": {
@@ -57,42 +55,47 @@ Required Headers:
         "locale": "IN"
     }
 }
+```
 
-Field Descriptions:
-- sessionId (required): Unique ID to track conversation. Use same ID for multi-turn chats.
-- message (required): The current message from the scammer
-  - sender: Always "scammer" for incoming messages
-  - text: The actual message content
-  - timestamp: ISO format timestamp or Unix milliseconds
-- conversationHistory (optional): Array of previous messages in the session
-- metadata (optional): Additional context about the message source
+**Field Descriptions:**
+| Field | Required | Description |
+|-------|----------|-------------|
+| sessionId | Yes | Unique ID to track conversation. Use same ID for multi-turn chats |
+| message | Yes | The current message from the scammer |
+| message.sender | Yes | Always "scammer" for incoming messages |
+| message.text | Yes | The actual message content |
+| message.timestamp | Yes | ISO format timestamp or Unix milliseconds |
+| conversationHistory | No | Array of previous messages in the session |
+| metadata | No | Additional context about the message source |
 
+### Output Format
 
-### OUTPUT FORMAT
-------------------
-
-Success Response (200 OK):
+**Success Response (200 OK):**
+```json
 {
     "status": "success",
     "reply": "Oh really? What number should I call you on?"
 }
+```
 
-Field Descriptions:
-- status: "success" if processed correctly
-- reply: The AI-generated response to engage the scammer
+**Field Descriptions:**
+| Field | Description |
+|-------|-------------|
+| status | "success" if processed correctly |
+| reply | The AI-generated response to engage the scammer |
 
+**Error Responses:**
+| Code | Meaning |
+|------|---------|
+| 401 | Invalid or missing API key |
+| 422 | Invalid request format |
+| 429 | Rate limit exceeded |
 
-Error Responses:
-- 401 Unauthorized: Invalid or missing API key
-- 422 Validation Error: Invalid request format
-- 429 Too Many Requests: Rate limit exceeded
+## Example Requests
 
+### Using PowerShell
 
-## EXAMPLE REQUESTS
-====================
-
-### Using PowerShell:
-
+```powershell
 $headers = @{
     "X-API-Key" = "use1029384yours"
     "Content-Type" = "application/json"
@@ -108,18 +111,20 @@ $body = @{
 } | ConvertTo-Json -Depth 4
 
 Invoke-RestMethod -Uri "http://localhost:8000/api/honeypot" -Method Post -Headers $headers -Body $body
+```
 
+### Using curl
 
-### Using curl (Command Prompt / Git Bash):
+```bash
+curl -X POST http://localhost:8000/api/honeypot \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: use1029384yours" \
+  -d '{"sessionId": "test-001", "message": {"sender": "scammer", "text": "You won a lottery!", "timestamp": "2026-02-07T12:00:00Z"}}'
+```
 
-curl -X POST http://localhost:8000/api/honeypot ^
-  -H "Content-Type: application/json" ^
-  -H "X-API-Key: use1029384yours" ^
-  -d "{\"sessionId\": \"test-001\", \"message\": {\"sender\": \"scammer\", \"text\": \"You won a lottery!\", \"timestamp\": \"2026-02-07T12:00:00Z\"}}"
+### Using Python
 
-
-### Using Python:
-
+```python
 import requests
 
 url = "http://localhost:8000/api/honeypot"
@@ -138,13 +143,14 @@ data = {
 
 response = requests.post(url, json=data, headers=headers)
 print(response.json())
+```
 
+## Multi-Turn Conversation Example
 
-## MULTI-TURN CONVERSATION EXAMPLE
-===================================
+**Turn 1 - Scammer sends first message:**
 
-Turn 1 - Scammer sends first message:
 Input:
+```json
 {
     "sessionId": "scam-session-123",
     "message": {
@@ -153,15 +159,20 @@ Input:
         "timestamp": "2026-02-07T12:00:00Z"
     }
 }
+```
 
 Output:
+```json
 {
     "status": "success",
     "reply": "What? My account is blocked? How can that be?"
 }
+```
 
-Turn 2 - Scammer responds:
+**Turn 2 - Scammer responds:**
+
 Input:
+```json
 {
     "sessionId": "scam-session-123",
     "message": {
@@ -170,33 +181,42 @@ Input:
         "timestamp": "2026-02-07T12:01:00Z"
     }
 }
+```
 
 Output:
+```json
 {
     "status": "success",
     "reply": "Oh no! But which branch should I call? What's your number?"
 }
+```
 
-(Notice: Same sessionId maintains conversation context)
+> **Note:** Same sessionId maintains conversation context
 
-
-## OTHER ENDPOINTS
-===================
+## Other Endpoints
 
 ### Health Check
+
+```
 GET http://localhost:8000/health
+```
 
 Output:
+```json
 {
     "status": "healthy"
 }
+```
 
+### Get Session Info
 
-### Get Session Info (for debugging)
+```
 GET http://localhost:8000/api/session/{sessionId}
 Header: X-API-Key: your-api-key
+```
 
 Output:
+```json
 {
     "session_id": "test-001",
     "message_count": 4,
@@ -212,13 +232,17 @@ Output:
     },
     "agent_notes": [...]
 }
-
+```
 
 ### Rate Limit Status
+
+```
 GET http://localhost:8000/api/rate-limit
 Header: X-API-Key: your-api-key
+```
 
 Output:
+```json
 {
     "limits": {
         "requests_per_minute": 10,
@@ -229,21 +253,13 @@ Output:
         "remaining_per_day": 98
     }
 }
+```
 
+## Common Errors & Solutions
 
-## COMMON ERRORS & SOLUTIONS
-=============================
-
-1. "Invalid API key"
-   - Check X-API-Key header matches API_KEY in .env file
-
-2. "Empty request body"
-   - Make sure you're sending JSON in the request body
-
-3. "Validation failed"
-   - Check that sessionId and message fields are present
-   - Check message has sender, text, and timestamp
-
-4. "Rate limit exceeded"
-   - Wait for the cooldown period (1 minute or 24 hours)
-   - Check /api/rate-limit for remaining requests
+| Error | Solution |
+|-------|----------|
+| "Invalid API key" | Check X-API-Key header matches API_KEY in .env file |
+| "Empty request body" | Make sure you're sending JSON in the request body |
+| "Validation failed" | Check that sessionId and message fields are present |
+| "Rate limit exceeded" | Wait for cooldown period (1 min or 24 hours) |

@@ -38,7 +38,7 @@ Server runs at `http://localhost:8000`
 
 ### 4. Expose Publicly (Optional)
 
-See [NGROK_SETUP.txt](NGROK_SETUP.txt) for detailed deployment instructions.
+See [NGROK_SETUP.md](NGROK_SETUP.md) for detailed deployment instructions.
 
 ```bash
 ngrok http 8000
@@ -56,7 +56,7 @@ ngrok http 8000
 
 ## Usage
 
-📖 **For complete examples, see [API_USAGE_GUIDE.txt](API_USAGE_GUIDE.txt)**
+📖 **For complete examples, see [API_USAGE_GUIDE.md](API_USAGE_GUIDE.md)**
 
 ### Input Format
 
@@ -103,8 +103,8 @@ Agentic-Honey-Pot/
 ├── main.py                      # FastAPI application
 ├── requirements.txt             # Dependencies
 ├── .env                         # Environment variables
-├── NGROK_SETUP.txt              # ngrok deployment guide
-├── API_USAGE_GUIDE.txt          # Input/output reference
+├── NGROK_SETUP.md              # ngrok deployment guide
+├── API_USAGE_GUIDE.md          # Input/output reference
 └── README.md
 ```
 
