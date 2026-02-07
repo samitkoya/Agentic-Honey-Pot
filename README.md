@@ -1,4 +1,4 @@
-# 🍯 Agentic Honey-Pot
+# Agentic Honey-Pot
 
 AI-powered honeypot REST API that detects scam messages, engages scammers in conversations, and extracts intelligence.
 
