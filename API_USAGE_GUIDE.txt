@@ -1,0 +1,249 @@
+# API Usage Guide - Input & Output Reference
+# ============================================
+
+This guide explains how to use the Agentic Honey-Pot API when running locally.
+
+
+## STEP 1: START THE SERVER
+===========================
+
+Open a terminal and run:
+
+    python main.py
+
+You should see:
+    INFO:     Uvicorn running on http://0.0.0.0:8000
+
+The server is now running at: http://localhost:8000
+
+
+## STEP 2: TEST THE SERVER
+===========================
+
+Open a browser and go to: http://localhost:8000
+
+Expected Output:
+    {
+        "service": "Agentic Honey-Pot API",
+        "version": "1.0.0",
+        "status": "active"
+    }
+
+
+## STEP 3: USING THE HONEYPOT API
+==================================
+
+Endpoint: POST http://localhost:8000/api/honeypot
+
+Required Headers:
+    - X-API-Key: your-api-key (from .env file)
+    - Content-Type: application/json
+
+
+### INPUT FORMAT
+-----------------
+
+{
+    "sessionId": "unique-session-id",
+    "message": {
+        "sender": "scammer",
+        "text": "The scammer's message text here",
+        "timestamp": "2026-02-07T12:00:00Z"
+    },
+    "conversationHistory": [],
+    "metadata": {
+        "channel": "SMS",
+        "language": "English",
+        "locale": "IN"
+    }
+}
+
+Field Descriptions:
+- sessionId (required): Unique ID to track conversation. Use same ID for multi-turn chats.
+- message (required): The current message from the scammer
+  - sender: Always "scammer" for incoming messages
+  - text: The actual message content
+  - timestamp: ISO format timestamp or Unix milliseconds
+- conversationHistory (optional): Array of previous messages in the session
+- metadata (optional): Additional context about the message source
+
+
+### OUTPUT FORMAT
+------------------
+
+Success Response (200 OK):
+{
+    "status": "success",
+    "reply": "Oh really? What number should I call you on?"
+}
+
+Field Descriptions:
+- status: "success" if processed correctly
+- reply: The AI-generated response to engage the scammer
+
+
+Error Responses:
+- 401 Unauthorized: Invalid or missing API key
+- 422 Validation Error: Invalid request format
+- 429 Too Many Requests: Rate limit exceeded
+
+
+## EXAMPLE REQUESTS
+====================
+
+### Using PowerShell:
+
+$headers = @{
+    "X-API-Key" = "use1029384yours"
+    "Content-Type" = "application/json"
+}
+
+$body = @{
+    sessionId = "test-001"
+    message = @{
+        sender = "scammer"
+        text = "Congratulations! You won Rs 50 lakh lottery. Send OTP to claim."
+        timestamp = "2026-02-07T12:00:00Z"
+    }
+} | ConvertTo-Json -Depth 4
+
+Invoke-RestMethod -Uri "http://localhost:8000/api/honeypot" -Method Post -Headers $headers -Body $body
+
+
+### Using curl (Command Prompt / Git Bash):
+
+curl -X POST http://localhost:8000/api/honeypot ^
+  -H "Content-Type: application/json" ^
+  -H "X-API-Key: use1029384yours" ^
+  -d "{\"sessionId\": \"test-001\", \"message\": {\"sender\": \"scammer\", \"text\": \"You won a lottery!\", \"timestamp\": \"2026-02-07T12:00:00Z\"}}"
+
+
+### Using Python:
+
+import requests
+
+url = "http://localhost:8000/api/honeypot"
+headers = {
+    "X-API-Key": "use1029384yours",
+    "Content-Type": "application/json"
+}
+data = {
+    "sessionId": "test-001",
+    "message": {
+        "sender": "scammer",
+        "text": "Your bank account is blocked. Click here to verify.",
+        "timestamp": "2026-02-07T12:00:00Z"
+    }
+}
+
+response = requests.post(url, json=data, headers=headers)
+print(response.json())
+
+
+## MULTI-TURN CONVERSATION EXAMPLE
+===================================
+
+Turn 1 - Scammer sends first message:
+Input:
+{
+    "sessionId": "scam-session-123",
+    "message": {
+        "sender": "scammer",
+        "text": "Your SBI account is blocked. Call immediately.",
+        "timestamp": "2026-02-07T12:00:00Z"
+    }
+}
+
+Output:
+{
+    "status": "success",
+    "reply": "What? My account is blocked? How can that be?"
+}
+
+Turn 2 - Scammer responds:
+Input:
+{
+    "sessionId": "scam-session-123",
+    "message": {
+        "sender": "scammer",
+        "text": "Yes sir, you need to verify your details. What is your account number?",
+        "timestamp": "2026-02-07T12:01:00Z"
+    }
+}
+
+Output:
+{
+    "status": "success",
+    "reply": "Oh no! But which branch should I call? What's your number?"
+}
+
+(Notice: Same sessionId maintains conversation context)
+
+
+## OTHER ENDPOINTS
+===================
+
+### Health Check
+GET http://localhost:8000/health
+
+Output:
+{
+    "status": "healthy"
+}
+
+
+### Get Session Info (for debugging)
+GET http://localhost:8000/api/session/{sessionId}
+Header: X-API-Key: your-api-key
+
+Output:
+{
+    "session_id": "test-001",
+    "message_count": 4,
+    "scam_detected": true,
+    "scam_type": "bank_fraud",
+    "confidence": 0.85,
+    "callback_sent": false,
+    "intelligence": {
+        "bankAccounts": [],
+        "upiIds": ["scammer@upi"],
+        "phishingLinks": ["http://fake-bank.com"],
+        "phoneNumbers": ["9876543210"]
+    },
+    "agent_notes": [...]
+}
+
+
+### Rate Limit Status
+GET http://localhost:8000/api/rate-limit
+Header: X-API-Key: your-api-key
+
+Output:
+{
+    "limits": {
+        "requests_per_minute": 10,
+        "requests_per_day": 100
+    },
+    "remaining": {
+        "remaining_per_minute": 9,
+        "remaining_per_day": 98
+    }
+}
+
+
+## COMMON ERRORS & SOLUTIONS
+=============================
+
+1. "Invalid API key"
+   - Check X-API-Key header matches API_KEY in .env file
+
+2. "Empty request body"
+   - Make sure you're sending JSON in the request body
+
+3. "Validation failed"
+   - Check that sessionId and message fields are present
+   - Check message has sender, text, and timestamp
+
+4. "Rate limit exceeded"
+   - Wait for the cooldown period (1 minute or 24 hours)
+   - Check /api/rate-limit for remaining requests

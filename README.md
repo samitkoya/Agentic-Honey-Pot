@@ -56,29 +56,36 @@ ngrok http 8000
 
 ## Usage
 
-### Request
+📖 **For complete examples, see [API_USAGE_GUIDE.txt](API_USAGE_GUIDE.txt)**
 
-```bash
-curl -X POST http://localhost:8000/api/honeypot \
-  -H "Content-Type: application/json" \
-  -H "X-API-Key: your-api-key" \
-  -d '{
-    "sessionId": "session-001",
-    "message": {
-      "sender": "scammer",
-      "text": "Your bank account is blocked. Click here to verify.",
-      "timestamp": "2026-02-07T12:00:00Z"
-    }
-  }'
+### Input Format
+
+```json
+{
+  "sessionId": "unique-session-id",
+  "message": {
+    "sender": "scammer",
+    "text": "The scammer's message",
+    "timestamp": "2026-02-07T12:00:00Z"
+  }
+}
 ```
 
-### Response
+### Output Format
 
 ```json
 {
   "status": "success",
-  "reply": "What? My account is blocked? How can that be?"
+  "reply": "AI-generated response to engage scammer"
 }
+```
+
+### Quick Test (PowerShell)
+
+```powershell
+$headers = @{ "X-API-Key" = "your-api-key"; "Content-Type" = "application/json" }
+$body = '{"sessionId": "test", "message": {"sender": "scammer", "text": "You won lottery!", "timestamp": "2026-02-07T12:00:00Z"}}'
+Invoke-RestMethod -Uri "http://localhost:8000/api/honeypot" -Method Post -Headers $headers -Body $body
 ```
 
 ## Project Structure
@@ -97,6 +104,7 @@ Agentic-Honey-Pot/
 ├── requirements.txt             # Dependencies
 ├── .env                         # Environment variables
 ├── NGROK_SETUP.txt              # ngrok deployment guide
+├── API_USAGE_GUIDE.txt          # Input/output reference
 └── README.md
 ```
 
