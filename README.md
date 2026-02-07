@@ -1,73 +1,77 @@
-# Agentic Honey-Pot System
+# 🍯 Agentic Honey-Pot
 
-An AI-powered honeypot REST API that detects scam messages, engages scammers in multi-turn conversations, extracts intelligence, and reports results to GUVI's evaluation endpoint.
+AI-powered honeypot REST API that detects scam messages, engages scammers in conversations, and extracts intelligence.
 
-## 🚀 Quick Start
+## Features
+
+- **Scam Detection** - Keyword analysis + LLM-based classification
+- **AI Agent** - Engages scammers using Gemini 1.5 Flash with smart fallback responses
+- **Intelligence Extraction** - Captures bank accounts, UPI IDs, phone numbers, and phishing links
+- **Session Management** - Tracks multi-turn conversations
+- **Rate Limiting** - 10 RPM, 100 RPD protection
+
+## Quick Start
 
 ### 1. Install Dependencies
 
 ```bash
-cd "c:\Users\Samit Reddy\Desktop\AIHP\Agentic-Honey-Pot"
 pip install -r requirements.txt
 ```
 
 ### 2. Configure Environment
 
-Copy the example environment file and add your API keys:
+Create a `.env` file:
 
-```bash
-copy .env.example .env
-```
-
-Edit `.env` with your values:
 ```env
 API_KEY=your-secret-api-key
 GEMINI_API_KEY=your-gemini-api-key
-LLM_PROVIDER=gemini
-ENGAGEMENT_THRESHOLD=5
+ENGAGEMENT_THRESHOLD=10
 ```
 
 ### 3. Run the Server
 
 ```bash
 python main.py
-# or
-uvicorn main:app --reload --port 8000
 ```
 
-## 📡 API Endpoints
+Server runs at `http://localhost:8000`
 
-### Health Check
-```
-GET /health
-```
+### 4. Expose Publicly (Optional)
 
-### Main Honeypot Endpoint
-```
-POST /api/honeypot
-Header: x-api-key: YOUR_SECRET_KEY
-Content-Type: application/json
+```bash
+ngrok http 8000
 ```
 
-**Request Body (First Message):**
-```json
-{
-  "sessionId": "unique-session-id",
-  "message": {
-    "sender": "scammer",
-    "text": "Your bank account will be blocked today. Verify immediately.",
-    "timestamp": 1770005528731
-  },
-  "conversationHistory": [],
-  "metadata": {
-    "channel": "SMS",
-    "language": "English",
-    "locale": "IN"
-  }
-}
+## API Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/` | GET | Service info |
+| `/health` | GET | Health check |
+| `/api/honeypot` | POST | Main honeypot endpoint |
+| `/api/session/{id}` | GET | Get session info |
+| `/api/rate-limit` | GET | Rate limit status |
+
+## Usage
+
+### Request
+
+```bash
+curl -X POST http://localhost:8000/api/honeypot \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: your-api-key" \
+  -d '{
+    "sessionId": "session-001",
+    "message": {
+      "sender": "scammer",
+      "text": "Your bank account is blocked. Click here to verify.",
+      "timestamp": "2026-02-07T12:00:00Z"
+    }
+  }'
 ```
 
-**Response:**
+### Response
+
 ```json
 {
   "status": "success",
@@ -75,82 +79,40 @@ Content-Type: application/json
 }
 ```
 
-## 🏗️ Architecture
+## Project Structure
 
 ```
-┌──────────────────────────────────────────────────────────┐
-│                    Incoming Request                      │
-└────────────────────────┬─────────────────────────────────┘
-                         ▼
-┌──────────────────────────────────────────────────────────┐
-│                  API Key Validation                      │
-└────────────────────────┬─────────────────────────────────┘
-                         ▼
-┌──────────────────────────────────────────────────────────┐
-│                   Scam Detection                         │
-│  • Keyword Analysis    • Pattern Matching    • LLM       │
-└────────────────────────┬─────────────────────────────────┘
-                         ▼
-┌──────────────────────────────────────────────────────────┐
-│                   AI Agent Response                      |
-│  • Persona Selection   • Tactic Selection    • Response  |
-└────────────────────────┬─────────────────────────────────┘
-                         ▼
-┌──────────────────────────────────────────────────────────┐
-│               Intelligence Extraction                    │
-│  • Bank Accounts  • UPI IDs  • Links  • Phone Numbers    │
-└────────────────────────┬─────────────────────────────────┘
-                         ▼
-┌──────────────────────────────────────────────────────────┐
-│                GUVI Callback (when ready)                │
-└──────────────────────────────────────────────────────────┘
+Agentic-Honey-Pot/
+├── app/
+│   ├── __init__.py              # Package init
+│   ├── agent.py                 # AI agent (Gemini + fallbacks)
+│   ├── config.py                # Configuration
+│   ├── intelligence_extractor.py # Extracts scammer details
+│   ├── models.py                # Pydantic models
+│   ├── scam_detector.py         # Scam detection engine
+│   └── session_manager.py       # Session tracking
+├── main.py                      # FastAPI application
+├── requirements.txt             # Dependencies
+├── .env                         # Environment variables
+└── README.md
 ```
 
-## 📁 Project Structure
+## Architecture
 
 ```
-AIHP/
-├── app/                        # Application Package
-│   ├── __init__.py
-│   ├── agent.py                # AI agent for engagement
-│   ├── config.py               # Configuration & constants
-│   ├── guvi_callback.py        # GUVI API callback
-│   ├── intelligence_extractor.py # Intelligence extraction
-│   ├── models.py               # Pydantic data models
-│   ├── scam_detector.py        # Scam detection engine
-│   └── session_manager.py      # Session management
-├── main.py                     # Entry point & FastAPI app
-├── requirements.txt            # Python dependencies
-├── .env.example                # Environment template
-└── README.md                   # This file
+Request → API Key Validation → Rate Limiting → Scam Detection
+                                                    ↓
+                                            AI Agent Response
+                                                    ↓
+                                        Intelligence Extraction
+                                                    ↓
+                                              Response
 ```
 
-## 🔑 Features
+## Fallback Responses
 
-- **Hybrid Scam Detection**: Keyword matching + LLM classification
-- **Multi-Persona Agent**: Confused elderly, naive user, busy professional
-- **Engagement Tactics**: Clarification, delays, verification requests
-- **Intelligence Extraction**: Bank accounts, UPI IDs, phone numbers, URLs
-- **Session Management**: Tracks multi-turn conversations
-- **GUVI Integration**: Automatic callback when engagement threshold reached
-
-## 🧪 Testing
-
-```powershell
-# Test with PowerShell
-$headers = @{
-    "x-api-key" = "your-api-key"
-    "Content-Type" = "application/json"
-}
-$body = @{
-    sessionId = "test-001"
-    message = @{
-        sender = "scammer"
-        text = "Your bank account will be blocked. Click here: http://fake.link/verify"
-        timestamp = 1770005528731
-    }
-    conversationHistory = @()
-} | ConvertTo-Json -Depth 4
-
-Invoke-RestMethod -Uri "http://localhost:8000/api/honeypot" -Method Post -Headers $headers -Body $body
-```
+When LLM is unavailable, the system uses 15 rotating prompts designed to extract scammer details:
+- Phone numbers
+- Bank account details
+- UPI IDs
+- Phishing links

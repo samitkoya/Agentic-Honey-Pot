@@ -8,19 +8,17 @@ engages scammers in multi-turn conversations, and extracts intelligence.
 from fastapi import FastAPI, HTTPException, Header, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Optional, Dict
-import asyncio
 from datetime import datetime, timedelta
 from collections import defaultdict
 import time
 import json
 
 from app.models import HoneypotRequest, HoneypotResponse, Message
-from app.config import API_KEY, ENGAGEMENT_THRESHOLD
+from app.config import API_KEY
 from app.scam_detector import scam_detector
 from app.agent import honeypot_agent
 from app.intelligence_extractor import intelligence_extractor
 from app.session_manager import session_manager
-from app.guvi_callback import send_callback_with_retry
 
 
 # ========== RATE LIMITING ==========
@@ -128,7 +126,7 @@ async def check_rate_limit(x_api_key: str = Header(...)):
 
 @app.get("/")
 async def root():
-    """Root endpoint."""
+    """Root endpoint"""
     return {
         "service": "Agentic Honey-Pot API",
         "version": "1.0.0",
@@ -149,8 +147,8 @@ async def honeypot_endpoint(
     _rate_check: str = Depends(check_rate_limit)
 ):
     """
-    Main honeypot endpoint.
-    Handles manual body parsing to allow missing Content-Type headers.
+    Main honeypot endpoint
+    Handles manual body parsing to allow missing Content-Type headers
     """
     # =========================================================================
     # ROBUST BODY PARSING START
@@ -231,19 +229,15 @@ async def honeypot_endpoint(
             f"{len(intel.phishingLinks)} links, {len(intel.phoneNumbers)} phones"
         )
     
-    # Step 3: Generate agent response
-    if session.scam_detected or is_scam:
-        # Activate AI agent for scam engagement
-        reply, agent_note = await honeypot_agent.generate_response(
-            current_message.text,
-            session.conversation_history,
-            session.scam_type or scam_type,
-            session_manager.get_message_count(session_id)
-        )
-        session_manager.add_agent_note(session_id, agent_note)
-    else:
-        # Not a clear scam - generate cautious response
-        reply = "I'm not sure I understand. Can you explain what this is about?"
+    # Step 3: Generate agent response using Gemini AI
+    # Always use the AI agent for responses, regardless of scam detection
+    reply, agent_note = await honeypot_agent.generate_response(
+        current_message.text,
+        session.conversation_history,
+        session.scam_type or scam_type or "unknown",
+        session_manager.get_message_count(session_id)
+    )
+    session_manager.add_agent_note(session_id, agent_note)
     
     # Add agent's response to conversation history
     agent_message = Message(
@@ -253,32 +247,7 @@ async def honeypot_endpoint(
     )
     session_manager.add_message(session_id, agent_message)
     
-    # Step 4: Check if engagement threshold reached for GUVI callback
-    message_count = session_manager.get_message_count(session_id)
-    
-    if (session.scam_detected and 
-        message_count >= ENGAGEMENT_THRESHOLD and 
-        not session_manager.is_callback_sent(session_id)):
-        
-        # Get full intelligence from all messages
-        full_intel = intelligence_extractor.extract_from_conversation(
-            session.conversation_history
-        )
-        
-        # Send callback to GUVI (in background)
-        asyncio.create_task(
-            send_callback_with_retry(
-                session_id=session_id,
-                scam_detected=True,
-                total_messages=message_count,
-                intelligence=full_intel,
-                agent_notes=session_manager.get_agent_notes_summary(session_id)
-            )
-        )
-        
-        # Mark callback as sent
-        session_manager.mark_callback_sent(session_id)
-        session_manager.add_agent_note(session_id, "GUVI callback triggered")
+
     
     return HoneypotResponse(
         status="success",
