@@ -2,7 +2,6 @@
 
 from typing import List, Optional, Union
 from pydantic import BaseModel, Field
-from datetime import datetime
 
 
 class Message(BaseModel):
@@ -10,13 +9,6 @@ class Message(BaseModel):
     sender: str = Field(..., description="Message sender: 'scammer' or 'user'")
     text: str = Field(..., description="Message content")
     timestamp: Union[int, str] = Field(..., description="Epoch timestamp (ms) or ISO-8601 string")
-
-
-class Metadata(BaseModel):
-    """Message metadata."""
-    channel: Optional[str] = Field("SMS", description="Communication channel")
-    language: Optional[str] = Field("English", description="Language used")
-    locale: Optional[str] = Field("IN", description="Country/region")
 
 
 class HoneypotRequest(BaseModel):
@@ -27,8 +19,8 @@ class HoneypotRequest(BaseModel):
         default_factory=list, 
         description="Previous messages in conversation"
     )
-    metadata: Optional[Metadata] = Field(
-        default_factory=Metadata, 
+    metadata: Optional[dict] = Field(
+        default=None, 
         description="Message metadata"
     )
 
@@ -48,7 +40,6 @@ class ExtractedIntelligence(BaseModel):
     suspiciousKeywords: List[str] = Field(default_factory=list)
 
 
-
 class SessionData(BaseModel):
     """Session state tracking."""
     session_id: str
@@ -60,3 +51,4 @@ class SessionData(BaseModel):
     conversation_history: List[Message] = Field(default_factory=list)
     callback_sent: bool = False
     agent_notes: List[str] = Field(default_factory=list)
+

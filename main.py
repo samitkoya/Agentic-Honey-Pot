@@ -5,83 +5,55 @@ An AI-powered honeypot REST API that detects scam messages,
 engages scammers in multi-turn conversations, and extracts intelligence.
 """
 
-from fastapi import FastAPI, HTTPException, Header, Depends
-from fastapi.middleware.cors import CORSMiddleware
+import time
 from typing import Dict
 from collections import defaultdict
-import time
+from fastapi import FastAPI, HTTPException, Header, Depends
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.models import HoneypotRequest, HoneypotResponse, Message
 from app.config import API_KEY
-from app.scam_detector import scam_detector
-from app.agent import honeypot_agent
-from app.intelligence_extractor import intelligence_extractor
-from app.session_manager import session_manager
+from app.scam_detector import detect_scam
+from app.agent import generate_response
+from app.intelligence_extractor import extract_intelligence
+from app import session_manager
 
 
-# ========== RATE LIMITING ==========
-# Rate limits: 10 requests per day (RPD), 1 request per minute (RPM)
-REQUESTS_PER_DAY = 100
+# Rate Limiting setup (10 RPM, 100 RPD)
 REQUESTS_PER_MINUTE = 10
+REQUESTS_PER_DAY = 100
+_req_history: Dict[str, list] = defaultdict(list)
 
-class RateLimiter:
-    """In-memory rate limiter with RPD and RPM limits."""
-    
-    def __init__(self):
-        self.minute_requests: Dict[str, list] = defaultdict(list)
-        self.daily_requests: Dict[str, list] = defaultdict(list)
-    
-    def _cleanup_old_requests(self, key: str):
-        """Remove expired timestamps."""
-        now = time.time()
-        # Clean minute requests (older than 60 seconds)
-        self.minute_requests[key] = [
-            ts for ts in self.minute_requests[key] if now - ts < 60
-        ]
-        # Clean daily requests (older than 24 hours)
-        self.daily_requests[key] = [
-            ts for ts in self.daily_requests[key] if now - ts < 86400
-        ]
-    
-    def check_rate_limit(self, key: str) -> tuple[bool, str]:
-        """
-        Check if request is allowed.
-        Returns (allowed, error_message)
-        """
-        self._cleanup_old_requests(key)
-        now = time.time()
-        
-        # Check RPM (1 request per minute)
-        if len(self.minute_requests[key]) >= REQUESTS_PER_MINUTE:
-            wait_time = 60 - (now - self.minute_requests[key][0])
-            return False, f"Rate limit exceeded: 1 request per minute. Wait {int(wait_time)} seconds."
-        
-        # Check RPD (10 requests per day)
-        if len(self.daily_requests[key]) >= REQUESTS_PER_DAY:
-            oldest = self.daily_requests[key][0]
-            wait_time = 86400 - (now - oldest)
-            hours = int(wait_time // 3600)
-            minutes = int((wait_time % 3600) // 60)
-            return False, f"Rate limit exceeded: 10 requests per day. Wait {hours}h {minutes}m."
-        
-        return True, ""
-    
-    def record_request(self, key: str):
-        """Record a successful request."""
-        now = time.time()
-        self.minute_requests[key].append(now)
-        self.daily_requests[key].append(now)
-    
-    def get_remaining(self, key: str) -> dict:
-        """Get remaining requests."""
-        self._cleanup_old_requests(key)
-        return {
-            "remaining_per_minute": REQUESTS_PER_MINUTE - len(self.minute_requests[key]),
-            "remaining_per_day": REQUESTS_PER_DAY - len(self.daily_requests[key])
-        }
 
-# Global rate limiter instance
-rate_limiter = RateLimiter()
+def _cleanup_reqs(key: str, now: float):
+    _req_history[key] = [ts for ts in _req_history[key] if now - ts < 86400]
+
+
+def check_rate_limit_key(key: str) -> tuple[bool, str]:
+    now = time.time()
+    _cleanup_reqs(key, now)
+    recent = _req_history[key]
+    min_count = sum(1 for ts in recent if now - ts < 60)
+    if min_count >= REQUESTS_PER_MINUTE:
+        return False, "Rate limit exceeded: 10 requests per minute limit reached."
+    if len(recent) >= REQUESTS_PER_DAY:
+        return False, "Rate limit exceeded: 100 requests per day limit reached."
+    return True, ""
+
+
+def record_request(key: str):
+    _req_history[key].append(time.time())
+
+
+def get_remaining_requests(key: str) -> dict:
+    now = time.time()
+    _cleanup_reqs(key, now)
+    recent = _req_history[key]
+    min_count = sum(1 for ts in recent if now - ts < 60)
+    return {
+        "remaining_per_minute": max(0, REQUESTS_PER_MINUTE - min_count),
+        "remaining_per_day": max(0, REQUESTS_PER_DAY - len(recent))
+    }
 
 
 # Initialize FastAPI app
@@ -91,7 +63,6 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# CORS configuration
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -104,21 +75,15 @@ app.add_middleware(
 async def verify_api_key(x_api_key: str = Header(...)):
     """Verify API key authentication."""
     if x_api_key != API_KEY:
-        raise HTTPException(
-            status_code=401,
-            detail="Invalid API key"
-        )
+        raise HTTPException(status_code=401, detail="Invalid API key")
     return x_api_key
 
 
 async def check_rate_limit(x_api_key: str = Header(...)):
     """Check rate limits for the API key."""
-    allowed, error_msg = rate_limiter.check_rate_limit(x_api_key)
+    allowed, error_msg = check_rate_limit_key(x_api_key)
     if not allowed:
-        raise HTTPException(
-            status_code=429,
-            detail=error_msg
-        )
+        raise HTTPException(status_code=429, detail=error_msg)
     return x_api_key
 
 
@@ -145,33 +110,26 @@ async def honeypot_endpoint(
     _rate_check: str = Depends(check_rate_limit)
 ):
     """Main honeypot endpoint."""
-    
-    # Record this request for rate limiting
-    rate_limiter.record_request(api_key)
+    record_request(api_key)
     
     session_id = request.sessionId
     current_message = request.message
     history = request.conversationHistory or []
     
-    # Get or create session
     session = session_manager.get_session(session_id)
-    
-    # Add incoming message to session
     session_manager.add_message(session_id, current_message)
     
-    # Also add any history that's not already tracked
     if history and len(session.conversation_history) <= 1:
         for msg in history:
             if msg not in session.conversation_history:
                 session_manager.add_message(session_id, msg)
     
     # Step 1: Detect scam intent
-    is_scam, confidence, scam_type = await scam_detector.detect(
+    is_scam, confidence, scam_type = await detect_scam(
         current_message.text,
         session.conversation_history
     )
     
-    # Update session with scam detection results
     if is_scam and confidence > session.confidence:
         session_manager.update_session(
             session_id,
@@ -185,10 +143,9 @@ async def honeypot_endpoint(
         )
     
     # Step 2: Extract intelligence from current message
-    intel = intelligence_extractor.extract_from_text(current_message.text)
+    intel = extract_intelligence(current_message.text)
     session_manager.update_intelligence(session_id, intel)
     
-    # Log extracted intelligence
     if any([intel.bankAccounts, intel.upiIds, intel.phishingLinks, intel.phoneNumbers]):
         session_manager.add_agent_note(
             session_id,
@@ -197,8 +154,7 @@ async def honeypot_endpoint(
         )
     
     # Step 3: Generate agent response using Gemini AI
-    # Always use the AI agent for responses, regardless of scam detection
-    reply, agent_note = await honeypot_agent.generate_response(
+    reply, agent_note = await generate_response(
         current_message.text,
         session.conversation_history,
         session.scam_type or scam_type or "unknown",
@@ -206,7 +162,6 @@ async def honeypot_endpoint(
     )
     session_manager.add_agent_note(session_id, agent_note)
     
-    # Add agent's response to conversation history
     agent_message = Message(
         sender="user",
         text=reply,
@@ -244,16 +199,16 @@ async def get_rate_limit_status(
     api_key: str = Depends(verify_api_key)
 ):
     """Get rate limit status for the API key."""
-    remaining = rate_limiter.get_remaining(api_key)
     return {
         "limits": {
             "requests_per_minute": REQUESTS_PER_MINUTE,
             "requests_per_day": REQUESTS_PER_DAY
         },
-        "remaining": remaining
+        "remaining": get_remaining_requests(api_key)
     }
 
 
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
+
