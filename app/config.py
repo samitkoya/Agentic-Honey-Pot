@@ -12,8 +12,7 @@ API_KEY = os.getenv("API_KEY", "default-secret-key")
 # LLM Configuration
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 
-# Engagement threshold (number of messages before sending callback)
-ENGAGEMENT_THRESHOLD = int(os.getenv("ENGAGEMENT_THRESHOLD", "10"))
+
 
 # Scam detection keywords
 SCAM_KEYWORDS = [

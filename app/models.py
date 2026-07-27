@@ -48,14 +48,6 @@ class ExtractedIntelligence(BaseModel):
     suspiciousKeywords: List[str] = Field(default_factory=list)
 
 
-class GuviCallbackPayload(BaseModel):
-    """GUVI callback payload structure."""
-    sessionId: str
-    scamDetected: bool
-    totalMessagesExchanged: int
-    extractedIntelligence: ExtractedIntelligence
-    agentNotes: str
-
 
 class SessionData(BaseModel):
     """Session state tracking."""

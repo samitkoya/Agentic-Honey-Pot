@@ -1,8 +1,8 @@
 """Intelligence extraction from conversations."""
 
 import re
-from typing import List, Set
-from .models import ExtractedIntelligence, Message
+from typing import List
+from .models import ExtractedIntelligence
 from .config import SCAM_KEYWORDS
 
 
@@ -66,11 +66,7 @@ class IntelligenceExtractor:
     def extract_suspicious_keywords(self, text: str) -> List[str]:
         """Extract suspicious keywords from text."""
         text_lower = text.lower()
-        found = []
-        for keyword in self.scam_keywords:
-            if keyword in text_lower:
-                found.append(keyword)
-        return found
+        return [kw for kw in self.scam_keywords if kw in text_lower]
     
     def extract_from_text(self, text: str) -> ExtractedIntelligence:
         """Extract all intelligence from a single text."""
@@ -82,28 +78,6 @@ class IntelligenceExtractor:
             suspiciousKeywords=self.extract_suspicious_keywords(text)
         )
     
-    def extract_from_conversation(self, messages: List[Message]) -> ExtractedIntelligence:
-        """Extract intelligence from entire conversation history."""
-        combined = ExtractedIntelligence()
-        
-        for message in messages:
-            if message.sender == "scammer":
-                intel = self.extract_from_text(message.text)
-                combined.bankAccounts.extend(intel.bankAccounts)
-                combined.upiIds.extend(intel.upiIds)
-                combined.phishingLinks.extend(intel.phishingLinks)
-                combined.phoneNumbers.extend(intel.phoneNumbers)
-                combined.suspiciousKeywords.extend(intel.suspiciousKeywords)
-        
-        # Remove duplicates
-        combined.bankAccounts = list(set(combined.bankAccounts))
-        combined.upiIds = list(set(combined.upiIds))
-        combined.phishingLinks = list(set(combined.phishingLinks))
-        combined.phoneNumbers = list(set(combined.phoneNumbers))
-        combined.suspiciousKeywords = list(set(combined.suspiciousKeywords))
-        
-        return combined
-
 
 # Global instance
 intelligence_extractor = IntelligenceExtractor()

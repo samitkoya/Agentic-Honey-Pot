@@ -48,34 +48,7 @@ class SessionManager:
         existing.phoneNumbers = list(set(existing.phoneNumbers + intelligence.phoneNumbers))
         existing.suspiciousKeywords = list(set(existing.suspiciousKeywords + intelligence.suspiciousKeywords))
     
-    def mark_callback_sent(self, session_id: str) -> None:
-        """Mark that GUVI callback has been sent."""
-        session = self.get_session(session_id)
-        session.callback_sent = True
-    
-    def is_callback_sent(self, session_id: str) -> bool:
-        """Check if callback was already sent."""
-        session = self.get_session(session_id)
-        return session.callback_sent
-    
-    def get_message_count(self, session_id: str) -> int:
-        """Get total messages exchanged."""
-        return self.get_session(session_id).message_count
-    
-    def delete_session(self, session_id: str) -> bool:
-        """Remove a session (cleanup)."""
-        if session_id in self._sessions:
-            del self._sessions[session_id]
-            return True
-        return False
-    
-    def get_agent_notes_summary(self, session_id: str) -> str:
-        """Get combined agent notes as a summary."""
-        session = self.get_session(session_id)
-        if session.agent_notes:
-            return " | ".join(session.agent_notes)
-        return "No specific notes recorded."
-
 
 # Global session manager instance
 session_manager = SessionManager()
+

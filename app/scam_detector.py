@@ -14,7 +14,7 @@ class ScamDetector:
         """Initialize Gemini LLM."""
         if GEMINI_API_KEY:
             genai.configure(api_key=GEMINI_API_KEY)
-            self.model = genai.GenerativeModel('gemini-1.5-flash')
+            self.model = genai.GenerativeModel('gemini-2.0-flash')
             self.llm_available = True
         else:
             self.llm_available = False

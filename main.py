@@ -5,13 +5,11 @@ An AI-powered honeypot REST API that detects scam messages,
 engages scammers in multi-turn conversations, and extracts intelligence.
 """
 
-from fastapi import FastAPI, HTTPException, Header, Depends, Request
+from fastapi import FastAPI, HTTPException, Header, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from typing import Optional, Dict
-from datetime import datetime, timedelta
+from typing import Dict
 from collections import defaultdict
 import time
-import json
 
 from app.models import HoneypotRequest, HoneypotResponse, Message
 from app.config import API_KEY
@@ -142,42 +140,11 @@ async def health_check():
 
 @app.post("/api/honeypot", response_model=HoneypotResponse)
 async def honeypot_endpoint(
-    raw_request: Request,
+    request: HoneypotRequest,
     api_key: str = Depends(verify_api_key),
     _rate_check: str = Depends(check_rate_limit)
 ):
-    """
-    Main honeypot endpoint
-    Handles manual body parsing to allow missing Content-Type headers
-    """
-    # =========================================================================
-    # ROBUST BODY PARSING START
-    # =========================================================================
-    try:
-        # Read raw body bytes
-        body_bytes = await raw_request.body()
-        if not body_bytes:
-            raise HTTPException(status_code=400, detail="Empty request body")
-            
-        # Manually parse JSON
-        try:
-            body_data = json.loads(body_bytes)
-        except json.JSONDecodeError:
-            raise HTTPException(status_code=400, detail="Invalid JSON format")
-            
-        # Validate against Pydantic model
-        request = HoneypotRequest(**body_data)
-        
-    except ValueError as e:
-        # Pydantic validation error
-        raise HTTPException(status_code=422, detail=f"Validation failed: {str(e)}")
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Internal processing error: {str(e)}")
-    # =========================================================================
-    # ROBUST BODY PARSING END
-    # =========================================================================
+    """Main honeypot endpoint."""
     
     # Record this request for rate limiting
     rate_limiter.record_request(api_key)
@@ -235,7 +202,7 @@ async def honeypot_endpoint(
         current_message.text,
         session.conversation_history,
         session.scam_type or scam_type or "unknown",
-        session_manager.get_message_count(session_id)
+        session.message_count
     )
     session_manager.add_agent_note(session_id, agent_note)
     
@@ -246,8 +213,6 @@ async def honeypot_endpoint(
         timestamp=current_message.timestamp
     )
     session_manager.add_message(session_id, agent_message)
-    
-
     
     return HoneypotResponse(
         status="success",
