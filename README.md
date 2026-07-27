@@ -50,6 +50,20 @@ The server starts at `http://localhost:8000`.
 
 Every endpoint except `/` and `/health` requires an `X-API-Key` header.
 
+### GET /
+
+Returns service status and info. No authentication required.
+
+**Response:**
+
+```json
+{
+    "service": "Agentic Honey-Pot API",
+    "version": "1.0.0",
+    "status": "active"
+}
+```
+
 ### POST /api/honeypot
 
 The main endpoint. Send a scammer's message and get back a convincing victim response.
@@ -77,7 +91,7 @@ The main endpoint. Send a scammer's message and get back a convincing victim res
 - `message.sender` -- either `"scammer"` or `"user"`.
 - `message.timestamp` -- ISO-8601 string or epoch milliseconds.
 - `conversationHistory` -- optional, previous messages for context on the first request.
-- `metadata` -- optional, defaults to SMS / English / IN.
+- `metadata` -- optional key-value dictionary for context (e.g. channel, language, locale).
 
 **Response:**
 
@@ -101,6 +115,7 @@ Returns the full session state including extracted intelligence, scam detection 
     "scam_detected": true,
     "scam_type": "bank_fraud",
     "confidence": 0.92,
+    "callback_sent": false,
     "intelligence": {
         "bankAccounts": ["1234567890123"],
         "upiIds": ["fraud@ybl"],

@@ -7,7 +7,7 @@ from .config import SCAM_KEYWORDS
 
 BANK_ACCOUNT_PATTERN = re.compile(r'\b\d{9,18}\b')
 UPI_ID_PATTERN = re.compile(r'[a-zA-Z0-9._-]+@[a-zA-Z0-9]+', re.IGNORECASE)
-PHONE_PATTERN = re.compile(r'(\+91[\-\s]?)?[789]\d{9}\b')
+PHONE_PATTERN = re.compile(r'(?:\+91[\-\s]?)?[789]\d{9}\b')
 URL_PATTERN = re.compile(r'https?://[^\s<>"\'{}|\\^`\[\]]+', re.IGNORECASE)
 EXCLUDED_DOMAINS = {'gmail', 'yahoo', 'hotmail', 'outlook', 'email'}
 
