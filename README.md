@@ -9,9 +9,9 @@ Built with FastAPI and Google Gemini.
 
 When a scammer's message hits the API, three things happen in sequence:
 
-1. **Scam Detection** -- Gemini analyzes the message and conversation history to determine if it is a scam, what kind, and how confident it is.
-2. **Intelligence Extraction** -- Regex-based extractors pull out bank account numbers, UPI IDs, phone numbers, suspicious URLs, and known scam keywords from the raw text.
-3. **Response Generation** -- Gemini generates a short, believable reply designed to sound like a confused, trusting person. The goal is to keep the scammer engaged long enough to reveal more information.
+1. **Scam Detection** - Gemini analyzes the message and conversation history to determine if it is a scam, what kind, and how confident it is.
+2. **Intelligence Extraction** - Regex-based extractors pull out bank account numbers, UPI IDs, phone numbers, suspicious URLs, and known scam keywords from the raw text.
+3. **Response Generation** - Gemini generates a short, believable reply designed to sound like a confused, trusting person. The goal is to keep the scammer engaged long enough to reveal more information.
 
 If Gemini is unavailable or the API key quota is exhausted, the system falls back to a rotating set of hardcoded prompts that ask for payment details, phone numbers, and links.
 
