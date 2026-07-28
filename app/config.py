@@ -1,5 +1,3 @@
-"""Configuration management for the Agentic Honey-Pot system."""
-
 import os
 import google.generativeai as genai
 from dotenv import load_dotenv
@@ -18,4 +16,3 @@ SCAM_KEYWORDS = {
     "click", "upi", "payment", "refund", "cashback", "offer", "scheme",
     "government", "rbi", "sbi", "income tax", "free", "gift", "lucky"
 }
-

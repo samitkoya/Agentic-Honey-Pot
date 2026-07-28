@@ -1,18 +1,14 @@
-"""Pydantic models for request/response validation."""
-
 from typing import List, Optional, Union
 from pydantic import BaseModel, Field
 
 
 class Message(BaseModel):
-    """Individual message structure."""
     sender: str = Field(..., description="Message sender: 'scammer' or 'user'")
     text: str = Field(..., description="Message content")
     timestamp: Union[int, str] = Field(..., description="Epoch timestamp (ms) or ISO-8601 string")
 
 
 class HoneypotRequest(BaseModel):
-    """Incoming API request structure."""
     sessionId: str = Field(..., description="Unique session identifier")
     message: Message = Field(..., description="Latest incoming message")
     conversationHistory: Optional[List[Message]] = Field(
@@ -26,13 +22,11 @@ class HoneypotRequest(BaseModel):
 
 
 class HoneypotResponse(BaseModel):
-    """API response structure."""
     status: str = Field(..., description="Response status: 'success' or 'error'")
     reply: str = Field(..., description="Agent's response message")
 
 
 class ExtractedIntelligence(BaseModel):
-    """Extracted intelligence data structure."""
     bankAccounts: List[str] = Field(default_factory=list)
     upiIds: List[str] = Field(default_factory=list)
     phishingLinks: List[str] = Field(default_factory=list)
@@ -41,7 +35,6 @@ class ExtractedIntelligence(BaseModel):
 
 
 class SessionData(BaseModel):
-    """Session state tracking."""
     session_id: str
     message_count: int = 0
     scam_detected: bool = False
@@ -51,4 +44,3 @@ class SessionData(BaseModel):
     conversation_history: List[Message] = Field(default_factory=list)
     callback_sent: bool = False
     agent_notes: List[str] = Field(default_factory=list)
-

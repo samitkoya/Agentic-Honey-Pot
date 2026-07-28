@@ -1,10 +1,3 @@
-"""
-Agentic Honey-Pot System - Main FastAPI Application
-
-An AI-powered honeypot REST API that detects scam messages, 
-engages scammers in multi-turn conversations, and extracts intelligence.
-"""
-
 import time
 from typing import Dict
 from collections import defaultdict
@@ -18,8 +11,6 @@ from app.agent import generate_response
 from app.intelligence_extractor import extract_intelligence
 from app import session_manager
 
-
-# Rate Limiting setup (10 RPM, 100 RPD)
 REQUESTS_PER_MINUTE = 10
 REQUESTS_PER_DAY = 100
 _req_history: Dict[str, list] = defaultdict(list)
@@ -56,7 +47,6 @@ def get_remaining_requests(key: str) -> dict:
     }
 
 
-# Initialize FastAPI app
 app = FastAPI(
     title="Agentic Honey-Pot API",
     description="AI-powered honeypot for scam detection and intelligence extraction",
@@ -73,14 +63,12 @@ app.add_middleware(
 
 
 async def verify_api_key(x_api_key: str = Header(...)):
-    """Verify API key authentication."""
     if x_api_key != API_KEY:
         raise HTTPException(status_code=401, detail="Invalid API key")
     return x_api_key
 
 
 async def check_rate_limit(x_api_key: str = Header(...)):
-    """Check rate limits for the API key."""
     allowed, error_msg = check_rate_limit_key(x_api_key)
     if not allowed:
         raise HTTPException(status_code=429, detail=error_msg)
@@ -89,7 +77,6 @@ async def check_rate_limit(x_api_key: str = Header(...)):
 
 @app.get("/")
 async def root():
-    """Root endpoint"""
     return {
         "service": "Agentic Honey-Pot API",
         "version": "1.0.0",
@@ -99,7 +86,6 @@ async def root():
 
 @app.get("/health")
 async def health_check():
-    """Health check endpoint."""
     return {"status": "healthy"}
 
 
@@ -109,7 +95,6 @@ async def honeypot_endpoint(
     api_key: str = Depends(verify_api_key),
     _rate_check: str = Depends(check_rate_limit)
 ):
-    """Main honeypot endpoint."""
     record_request(api_key)
     
     session_id = request.sessionId
@@ -124,7 +109,6 @@ async def honeypot_endpoint(
             if msg not in session.conversation_history:
                 session_manager.add_message(session_id, msg)
     
-    # Step 1: Detect scam intent
     is_scam, confidence, scam_type = await detect_scam(
         current_message.text,
         session.conversation_history
@@ -142,7 +126,6 @@ async def honeypot_endpoint(
             f"Scam detected: {scam_type} (confidence: {confidence:.2f})"
         )
     
-    # Step 2: Extract intelligence from current message
     intel = extract_intelligence(current_message.text)
     session_manager.update_intelligence(session_id, intel)
     
@@ -153,7 +136,6 @@ async def honeypot_endpoint(
             f"{len(intel.phishingLinks)} links, {len(intel.phoneNumbers)} phones"
         )
     
-    # Step 3: Generate agent response using Gemini AI
     reply, agent_note = await generate_response(
         current_message.text,
         session.conversation_history,
@@ -168,6 +150,7 @@ async def honeypot_endpoint(
         timestamp=current_message.timestamp
     )
     session_manager.add_message(session_id, agent_message)
+    session_manager.save_intelligence_to_file(session_id)
     
     return HoneypotResponse(
         status="success",
@@ -180,7 +163,6 @@ async def get_session_info(
     session_id: str,
     api_key: str = Depends(verify_api_key)
 ):
-    """Get session information (for debugging)."""
     session = session_manager.get_session(session_id)
     return {
         "session_id": session.session_id,
@@ -198,7 +180,6 @@ async def get_session_info(
 async def get_rate_limit_status(
     api_key: str = Depends(verify_api_key)
 ):
-    """Get rate limit status for the API key."""
     return {
         "limits": {
             "requests_per_minute": REQUESTS_PER_MINUTE,
@@ -211,4 +192,3 @@ async def get_rate_limit_status(
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
-

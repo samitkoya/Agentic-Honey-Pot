@@ -1,5 +1,3 @@
-"""Intelligence extraction from conversations."""
-
 import re
 from typing import List
 from .models import ExtractedIntelligence
@@ -13,19 +11,16 @@ EXCLUDED_DOMAINS = {'gmail', 'yahoo', 'hotmail', 'outlook', 'email'}
 
 
 def extract_bank_accounts(text: str) -> List[str]:
-    """Extract potential bank account numbers."""
     matches = BANK_ACCOUNT_PATTERN.findall(text)
     return [m for m in matches if len(m) >= 10 and not m.startswith('20')]
 
 
 def extract_upi_ids(text: str) -> List[str]:
-    """Extract UPI IDs (format: name@bank)."""
     matches = UPI_ID_PATTERN.findall(text)
     return [m for m in matches if not any(domain in m.lower() for domain in EXCLUDED_DOMAINS)]
 
 
 def extract_phone_numbers(text: str) -> List[str]:
-    """Extract Indian phone numbers."""
     matches = PHONE_PATTERN.findall(text)
     cleaned = []
     for match in matches:
@@ -38,7 +33,6 @@ def extract_phone_numbers(text: str) -> List[str]:
 
 
 def extract_phishing_links(text: str) -> List[str]:
-    """Extract suspicious URLs."""
     matches = URL_PATTERN.findall(text)
     suspicious = []
     indicators = ['bit.ly', 'tinyurl', 'goo.gl', 't.co', 'login', 'verify', 'update', 'secure', '.xyz', '.tk', '.ml', '.ga', '.cf', 'bank', 'upi', 'payment']
@@ -51,13 +45,11 @@ def extract_phishing_links(text: str) -> List[str]:
 
 
 def extract_suspicious_keywords(text: str) -> List[str]:
-    """Extract suspicious keywords from text."""
     text_lower = text.lower()
     return [kw for kw in SCAM_KEYWORDS if kw in text_lower]
 
 
 def extract_intelligence(text: str) -> ExtractedIntelligence:
-    """Extract all intelligence from text."""
     return ExtractedIntelligence(
         bankAccounts=extract_bank_accounts(text),
         upiIds=extract_upi_ids(text),
@@ -65,4 +57,3 @@ def extract_intelligence(text: str) -> ExtractedIntelligence:
         phoneNumbers=extract_phone_numbers(text),
         suspiciousKeywords=extract_suspicious_keywords(text)
     )
-

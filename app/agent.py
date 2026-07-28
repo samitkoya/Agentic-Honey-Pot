@@ -1,5 +1,3 @@
-"""AI Agent for engaging scammers using Gemini."""
-
 import google.generativeai as genai
 from typing import List
 from .config import GEMINI_API_KEY
@@ -35,7 +33,6 @@ def _get_fallback_response() -> tuple[str, str]:
 
 async def generate_response(scammer_message: str, history: List[Message],
                             scam_type: str, message_count: int) -> tuple[str, str]:
-    """Generate a response to engage the scammer."""
     if not GEMINI_API_KEY:
         return _get_fallback_response()
     
@@ -76,4 +73,3 @@ YOUR RESPONSE (just the message, no quotes):"""
         print(f"Agent error: {e}")
         response, _ = _get_fallback_response()
         return response, f"Error: {str(e)[:50]} - using fallback"
-

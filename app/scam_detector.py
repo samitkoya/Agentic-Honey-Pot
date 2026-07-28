@@ -1,11 +1,8 @@
-"""Scam detection using Gemini LLM."""
-
 import google.generativeai as genai
 from .config import GEMINI_API_KEY
 
 
 async def detect_scam(text: str, history: list = None) -> tuple[bool, float, str]:
-    """Detect if message is a scam using Gemini."""
     if not GEMINI_API_KEY:
         return False, 0.0, "unknown"
     
@@ -26,7 +23,6 @@ SCAM_TYPE: [bank_fraud/upi_fraud/phishing/fake_offer/unknown]"""
 
     try:
         model = genai.GenerativeModel('gemini-3.1-flash-lite')
-
         response = await model.generate_content_async(prompt)
         result = response.text
         
@@ -41,4 +37,3 @@ SCAM_TYPE: [bank_fraud/upi_fraud/phishing/fake_offer/unknown]"""
     except Exception as e:
         print(f"Scam detection error: {e}")
         return False, 0.0, "unknown"
-
