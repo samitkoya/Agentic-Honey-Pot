@@ -41,6 +41,8 @@ async def generate_response(scammer_message: str, history: List[Message],
         recent = history[-6:]
         context = "\n".join([f"{'Caller' if m.sender == 'scammer' else 'You'}: {m.text}" for m in recent])
     
+    context_str = f"CONVERSATION SO FAR:\n{context}\n\n" if context else ""
+    
     prompt = f"""You are role-playing as a potential scam victim to keep the scammer engaged and extract information.
 
 CRITICAL RULES:
@@ -52,9 +54,7 @@ CRITICAL RULES:
 
 SCAM TYPE: {scam_type}
 
-{f"CONVERSATION SO FAR:\n{context}" if context else ""}
-
-SCAMMER'S MESSAGE: "{scammer_message}"
+{context_str}SCAMMER'S MESSAGE: "{scammer_message}"
 
 Generate a single, natural response that keeps the scammer engaged.
 YOUR RESPONSE (just the message, no quotes):"""

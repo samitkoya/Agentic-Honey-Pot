@@ -10,11 +10,11 @@ async def detect_scam(text: str, history: list = None) -> tuple[bool, float, str
     if history:
         context = "\n".join([f"{m.sender}: {m.text}" for m in history[-5:]])
     
+    context_str = f"Previous conversation:\n{context}\n\n" if context else ""
+    
     prompt = f"""Analyze this message for scam/fraud intent.
 
-{f"Previous conversation:\n{context}" if context else ""}
-
-Current message: "{text}"
+{context_str}Current message: "{text}"
 
 Respond in this exact format:
 IS_SCAM: [yes/no]
