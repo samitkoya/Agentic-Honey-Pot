@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { Send, FileText, Activity, Server, AlertCircle } from 'lucide-react';
+import { Send, FileText, Activity, Server, AlertCircle, Trash2 } from 'lucide-react';
 
 const API_URL = 'http://localhost:8000';
-const API_KEY = 'your-api-key-here'; // Ideally should be fetched from .env but for simulation this is fine
+const API_KEY = import.meta.env.VITE_API_KEY;
 
 const generateSessionId = () => `session-${Math.random().toString(36).substring(2, 9)}`;
 
@@ -16,6 +16,15 @@ function App() {
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef(null);
   const logsEndRef = useRef(null);
+
+  const endChat = () => {
+    const newSessionId = generateSessionId();
+    setSessionId(newSessionId);
+    setMessages([]);
+    setSessionData(null);
+    setInputValue('');
+    addLog(`Session ended. Started new session: ${newSessionId}`);
+  };
 
   const addLog = (message) => {
     setLogs((prev) => [...prev, { time: new Date().toISOString(), message }]);
@@ -151,8 +160,16 @@ function App() {
             <div className="w-3 h-3 rounded-full bg-red-500 animate-pulse"></div>
             <h2 className="font-semibold text-lg">Scammer Simulation UI</h2>
           </div>
-          <div className="text-xs text-gray-400 bg-gray-700 px-2 py-1 rounded">
-            Target: Honeypot Agent
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={endChat}
+              className="flex items-center gap-1 text-xs bg-red-900/50 hover:bg-red-800 text-red-200 px-2 py-1 rounded transition-colors border border-red-800/50"
+            >
+              <Trash2 size={14} /> End Chat
+            </button>
+            <div className="text-xs text-gray-400 bg-gray-700 px-2 py-1 rounded">
+              Target: Honeypot Agent
+            </div>
           </div>
         </div>
         
