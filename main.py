@@ -179,13 +179,27 @@ async def get_session_info(
 @app.get("/api/rate-limit")
 async def get_rate_limit_status(
     api_key: str = Depends(verify_api_key)
+    x_api_key: str = Header(None)
 ):
+    if not x_api_key:
+        return {
+            "limits": {
+                "requests_per_minute": REQUESTS_PER_MINUTE,
+                "requests_per_day": REQUESTS_PER_DAY
+            },
+            "remaining": "Provide x-api-key header to view remaining requests."
+        }
+        
+    if x_api_key != API_KEY:
+        raise HTTPException(status_code=401, detail="Invalid API key")
+        
     return {
         "limits": {
             "requests_per_minute": REQUESTS_PER_MINUTE,
             "requests_per_day": REQUESTS_PER_DAY
         },
         "remaining": get_remaining_requests(api_key)
+        "remaining": get_remaining_requests(x_api_key)
     }
 
 
