@@ -81,7 +81,6 @@ def save_intelligence_to_file(session_id: str, output_dir: str = "intelligence_l
     with open(filepath, "w", encoding="utf-8") as f:
         f.write(content)
         
-    root_filepath = "collected_intelligence.txt"
     root_filepath = os.path.join(output_dir, "collected_intelligence.txt")
     with open(root_filepath, "w", encoding="utf-8") as f:
         f.write(content)
