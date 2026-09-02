@@ -22,7 +22,7 @@ CONFIDENCE: [0.0-1.0]
 SCAM_TYPE: [bank_fraud/upi_fraud/phishing/fake_offer/unknown]"""
 
     try:
-        model = genai.GenerativeModel('gemini-3.1-flash-lite')
+        model = genai.GenerativeModel('gemini-3.5-flash-lite')
         response = await model.generate_content_async(prompt)
         result = response.text
         

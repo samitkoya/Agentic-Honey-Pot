@@ -37,6 +37,9 @@ def update_intelligence(session_id: str, intelligence: ExtractedIntelligence) ->
     existing.phishingLinks = list(set(existing.phishingLinks + intelligence.phishingLinks))
     existing.phoneNumbers = list(set(existing.phoneNumbers + intelligence.phoneNumbers))
     existing.suspiciousKeywords = list(set(existing.suspiciousKeywords + intelligence.suspiciousKeywords))
+    existing.ifscCodes = list(set(existing.ifscCodes + intelligence.ifscCodes))
+    existing.names = list(set(existing.names + intelligence.names))
+    existing.addresses = list(set(existing.addresses + intelligence.addresses))
     save_intelligence_to_file(session_id)
 
 
@@ -59,9 +62,12 @@ def save_intelligence_to_file(session_id: str, output_dir: str = "intelligence_l
         "--------------------------------------------------",
         "EXTRACTED THREAT INTELLIGENCE:",
         f"  - Bank Accounts      : {', '.join(intel.bankAccounts) if intel.bankAccounts else 'None'}",
+        f"  - IFSC Codes         : {', '.join(intel.ifscCodes) if intel.ifscCodes else 'None'}",
         f"  - UPI IDs            : {', '.join(intel.upiIds) if intel.upiIds else 'None'}",
         f"  - Phishing Links     : {', '.join(intel.phishingLinks) if intel.phishingLinks else 'None'}",
         f"  - Phone Numbers      : {', '.join(intel.phoneNumbers) if intel.phoneNumbers else 'None'}",
+        f"  - Names              : {', '.join(intel.names) if intel.names else 'None'}",
+        f"  - Addresses          : {', '.join(intel.addresses) if intel.addresses else 'None'}",
         f"  - Suspicious Keywords: {', '.join(intel.suspiciousKeywords) if intel.suspiciousKeywords else 'None'}",
         "--------------------------------------------------",
         "CONVERSATION HISTORY:"

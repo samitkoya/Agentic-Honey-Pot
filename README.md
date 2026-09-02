@@ -69,7 +69,7 @@ The Agentic Honey-Pot operates as an asynchronous HTTP service. Incoming scam me
 
 ## Key Capabilities
 
-- **Automated Fraud Classification**: Uses Google Gemini (`gemini-3.1-flash-lite`) to analyze incoming conversational text, categorize fraud types (`bank_fraud`, `upi_fraud`, `phishing`, `fake_offer`), and score detection confidence from `0.0` to `1.0`.
+- **Automated Fraud Classification**: Uses Google Gemini (`gemini-3.5-flash-lite`) to analyze incoming conversational text, categorize fraud types (`bank_fraud`, `upi_fraud`, `phishing`, `fake_offer`), and score detection confidence from `0.0` to `1.0`.
 - **Cyber Threat Intelligence (CTI) Parsing**: Evaluates text payloads against regular expressions to capture financial endpoints, payment routing addresses, malicious URLs, and Indian telecommunication formats.
 - **Adaptive Persona Dialog**: Roleplays as a naive victim to keep malicious actors engaged without exposing detection status.
 - **High-Availability Fallback**: Maintains uninterrupted operational status using a rotating fallback system of 15 human-crafted prompts if LLM quota is exhausted or API keys are unconfigured.
@@ -82,7 +82,7 @@ The Agentic Honey-Pot operates as an asynchronous HTTP service. Incoming scam me
 
 - **Python**: Version 3.10 or higher.
 - **API Access Key**: Custom client key for `X-API-Key` request header validation.
-- **Google Gemini API Key**: Required for Gemini model inference (`gemini-3.1-flash-lite`). Fallback mode activates if omitted.
+- **Google Gemini API Key**: Required for Gemini model inference (`gemini-3.5-flash-lite`). Fallback mode activates if omitted.
 
 ---
 
@@ -381,7 +381,7 @@ Located in `app/intelligence_extractor.py`, the engine processes raw text using 
 
 ### Classifier Logic
 
-Implemented in `app/scam_detector.py`. The module accepts the current message text and trailing conversation history. It issues an asynchronous request to Gemini (`gemini-3.1-flash-lite`) using a structured prompt:
+Implemented in `app/scam_detector.py`. The module accepts the current message text and trailing conversation history. It issues an asynchronous request to Gemini (`gemini-3.5-flash-lite`) using a structured prompt:
 
 ```text
 Analyze this message for scam/fraud intent.

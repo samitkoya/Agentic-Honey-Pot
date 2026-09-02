@@ -8,7 +8,7 @@ from app.models import HoneypotRequest, HoneypotResponse, Message
 from app.config import API_KEY
 from app.scam_detector import detect_scam
 from app.agent import generate_response
-from app.intelligence_extractor import extract_intelligence
+from app.intelligence_extractor import extract_intelligence, extract_intelligence_async
 from app import session_manager
 
 REQUESTS_PER_MINUTE = 10
@@ -108,6 +108,9 @@ async def honeypot_endpoint(
         for msg in history:
             if msg not in session.conversation_history:
                 session_manager.add_message(session_id, msg)
+                if msg.sender == "scammer":
+                    intel = await extract_intelligence_async(msg.text)
+                    session_manager.update_intelligence(session_id, intel)
     
     is_scam, confidence, scam_type = await detect_scam(
         current_message.text,
@@ -126,7 +129,7 @@ async def honeypot_endpoint(
             f"Scam detected: {scam_type} (confidence: {confidence:.2f})"
         )
     
-    intel = extract_intelligence(current_message.text)
+    intel = await extract_intelligence_async(current_message.text)
     session_manager.update_intelligence(session_id, intel)
     
     if any([intel.bankAccounts, intel.upiIds, intel.phishingLinks, intel.phoneNumbers]):
@@ -203,4 +206,4 @@ async def get_rate_limit_status(
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

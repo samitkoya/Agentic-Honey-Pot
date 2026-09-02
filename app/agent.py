@@ -43,29 +43,47 @@ async def generate_response(scammer_message: str, history: List[Message],
     
     context_str = f"CONVERSATION SO FAR:\n{context}\n\n" if context else ""
     
+    has_intel = False
+    intel_summary = ""
+    if hasattr(history, 'session_id'):
+        from . import session_manager
+        session = session_manager.get_session(history.session_id)
+        intel = session.intelligence
+        collected = []
+        if intel.bankAccounts: collected.append("bank accounts")
+        if intel.upiIds: collected.append("UPI IDs")
+        if intel.phishingLinks: collected.append("links")
+        if intel.phoneNumbers: collected.append("phone numbers")
+        if intel.ifscCodes: collected.append("IFSC codes")
+        
+        if len(collected) >= 2 or message_count > 15:
+            has_intel = True
+            intel_summary = f"You have successfully extracted: {', '.join(collected)}. "
+            
     prompt = f"""You are role-playing as a potential scam victim to keep the scammer engaged and extract information.
-
+    
 CRITICAL RULES:
-1. NEVER reveal you know this is a scam
-2. Be believable as a real human - use natural language
-3. Keep responses SHORT (1-2 sentences, max 50 words)
-4. Your goal: Keep them talking to extract phone numbers, links, account details, UPI IDs
-5. Act confused, worried, or naive to seem like an easy target
+1. Be extremely believable as a real human. Use conversational language, occasional slang, typos, and emotional reactions (worried, confused, eager). Talk like a real person, definitely not an AI.
+2. NEVER reveal you know this is a scam or that you are an AI.
+3. Keep responses SHORT (1-2 sentences, max 30 words) and natural.
+4. Your goal: Keep them talking to extract phone numbers, links, bank account details, IFSC codes, UPI IDs, names, and addresses.
+5. Act confused, worried, or naive to seem like an easy target. Ask questions that force them to provide concrete details.
+{f"6. {intel_summary} You have ALL the necessary information. END the conversation NATURALLY but FIRMLY (e.g., say your bank just called you about fraud, you are going to the police, or you realized it's a scam, and block them). Your response MUST include a final sentence starting with 'SYSTEM: Conversation terminated by Google Gemini API - Information gathered.' DO NOT ASK ANY MORE QUESTIONS." if has_intel else "6. Ask targeted questions to get details (e.g. 'where exactly do I send the money?', 'what name should I put for the transfer?', 'what's the IFSC code?')."}
 
 SCAM TYPE: {scam_type}
 
 {context_str}SCAMMER'S MESSAGE: "{scammer_message}"
 
-Generate a single, natural response that keeps the scammer engaged.
-YOUR RESPONSE (just the message, no quotes):"""
+Generate a single, natural response that keeps the scammer engaged (or decisively ends it if you have enough info).
+YOUR RESPONSE (just the message, no quotes, no AI prefixes except for the final termination message if applicable):"""
 
     try:
-        model = genai.GenerativeModel('gemini-3.1-flash-lite')
+        model = genai.GenerativeModel('gemini-3.5-flash-lite')
         response = await model.generate_content_async(prompt)
         reply = response.text.strip().strip('"\'')
         
-        if len(reply) > 200:
-            reply = reply[:200].rsplit(' ', 1)[0] + "..."
+        if len(reply) > 250:
+            reply = reply[:250].rsplit(' ', 1)[0] + "..."
         
         return reply, f"Generated via Gemini | Scam type: {scam_type}"
         

@@ -138,6 +138,9 @@ function App() {
               
               <p className="text-gray-400 mt-4"># EXTRACTED DATA</p>
               <p>Bank Accounts: {sessionData.intelligence?.bankAccounts?.join(', ') || 'None'}</p>
+              <p>IFSC Codes: {sessionData.intelligence?.ifscCodes?.join(', ') || 'None'}</p>
+              <p>Names: {sessionData.intelligence?.names?.join(', ') || 'None'}</p>
+              <p>Addresses: {sessionData.intelligence?.addresses?.join(', ') || 'None'}</p>
               <p>UPI IDs: {sessionData.intelligence?.upiIds?.join(', ') || 'None'}</p>
               <p>Phones: {sessionData.intelligence?.phoneNumbers?.join(', ') || 'None'}</p>
               <p>Links: {sessionData.intelligence?.phishingLinks?.join(', ') || 'None'}</p>

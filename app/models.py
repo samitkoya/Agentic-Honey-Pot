@@ -32,6 +32,9 @@ class ExtractedIntelligence(BaseModel):
     phishingLinks: List[str] = Field(default_factory=list)
     phoneNumbers: List[str] = Field(default_factory=list)
     suspiciousKeywords: List[str] = Field(default_factory=list)
+    ifscCodes: List[str] = Field(default_factory=list)
+    names: List[str] = Field(default_factory=list)
+    addresses: List[str] = Field(default_factory=list)
 
 
 class SessionData(BaseModel):
